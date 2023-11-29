@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="UTF-8">
+    <link href="/static/css/items.css" rel="stylesheet" type="text/css" media="all">
+    <title>自分の投稿一覧</title>
+</head>
+<body>
+    <a href="/index">新規投稿をする</a>
+    <p>{{user_name}}さんの投稿一覧</p>
+    <p>クリックで編集ができます。</p>
+    {% if items %}
+        <ul>
+        {% for item in items %}
+            <li><a href="/item?id={{item[0]}}"><image src="\static\images\{{ item[1] }}"></a></li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>まだ投稿がありません。</p>
+        <a href="/index">新規投稿をする</a>
+    {% endif %}
+</body>
+</html>

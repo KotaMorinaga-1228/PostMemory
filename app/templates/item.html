@@ -1,0 +1,155 @@
+<body>
+    <header>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="/static/css/style.css" rel="stylesheet" type="text/css" media="all">
+        <title>投稿内容の編集</title>
+        <style>
+            .highlighted {
+                background-color: yellow;
+            }
+        </style>
+    </header>
+    <main>
+        <h2>投稿内容の編集</h2>
+        <div id="box">
+            <image src="\static\images\{{ data[2] }}">
+                <form id="form" action="/modify" method="POST">
+                    <textarea name="origin-body" id="inputText" placeholder="思い出話を入力してください" rows="5"></textarea>
+                    <p id="displayText">{{data[1] | safe}}</p>
+                    <div id="button">
+                        <button onclick="resetSelectedStrings()" type="button">リセット</button>
+                        <button onclick="undopop()" type="button">1つ戻る</button>
+                        <button type="button" id="removeDuplicatesButton" style="display: none;"
+                            onclick="removeDuplicates()">変更を保存</button>
+                    </div>
+                    <input type="hidden" name="archives_id" value={{data[0]}}>
+                    <input type="hidden" name="body" value="" id="secretField">
+                </form>
+        </div>
+
+    </main>
+
+    <script>
+        var removeDuplicatesButton = document.getElementById('removeDuplicatesButton');
+        var selectedText = '';
+        var undolist = [];
+
+        function updateTextarea() {
+        var displayTextContent = document.getElementById('displayText').textContent;
+        var inputTextarea = document.getElementById('inputText');
+        inputTextarea.value = displayTextContent; // textareaの値をdisplayTextのtextContentで更新
+        }
+
+        // ページ読み込み完了時に実行
+        document.addEventListener('DOMContentLoaded', function() {
+            updateTextarea(); // ページ読み込み時にtextareaを更新
+            reflectText();
+            loadHighlightedSpans();
+        });
+
+
+        function undopush() {
+            var displayText = document.getElementById('displayText').innerHTML;
+            var last = undolist.slice(-1)[0]
+            if (displayText !== last){
+                undolist.push(displayText);
+                console.log(last);
+            }
+        }
+        function undopop() {
+            var inputText = document.getElementById('inputText').value;
+            var displayText = document.getElementById('displayText');
+            if(undolist.length == 0){
+                displayText.innerHTML = inputText
+            }else{
+                displayText.innerHTML = undolist.pop()
+            }
+        }
+        function reflectText() {
+            var displayText = document.getElementById('displayText');
+            displayText.onmouseup = highlightSelection; // マウスで選択すると highlightSelection を呼び出し
+            updateRemoveDuplicatesButton(); // 選択完了ボタンの表示可否機能の呼び出し
+        }
+
+        // ハイライトの設定
+        function highlightSelection() {
+            var selection = window.getSelection();
+            var selectionRange = selection.getRangeAt(0);
+            var selectionText = selection.toString().trim()
+            var parent = selectionRange.commonAncestorContainer
+
+            if (selectionText !== '') {
+                if (parent !== 'SPAN'){
+                    console.log(parent)
+                    var spans = document.querySelectorAll('.highlighted');
+                    spans.forEach(function (span) {
+                        var spanText = span.textContent;
+                        if (spanText == selectionText) {
+                            return;
+                        };
+                    });
+                    var tag = document.createElement('span');
+                    tag.className = 'highlighted';
+                    selectionRange.surroundContents(tag); // クラス名が highlighted の span タグで囲む
+                    updateRemoveDuplicatesButton();
+                    undopush();
+                    tag.onclick = function () {
+                        if (tag.parentElement) {
+                            tag.outerHTML = tag.innerHTML; // クリックで <span> タグを取り外す
+                            updateRemoveDuplicatesButton();
+                            undopush();
+                        }
+                    };
+                };
+            };
+        }
+
+        // リセットボタン
+        function resetSelectedStrings() {
+            var inputText = document.getElementById('inputText').value;
+            var displayText = document.getElementById('displayText');
+            displayText.innerHTML = inputText; // <span> タグを取り外す
+            updateRemoveDuplicatesButton();
+            undopush();
+        }
+
+        // 選択完了ボタンの表示
+        function updateRemoveDuplicatesButton() {
+            var displayText = document.getElementById('displayText');
+            if (displayText.textContent.trim() === '') {
+                removeDuplicatesButton.style.display = 'none';
+            } else {
+                removeDuplicatesButton.style.display = document.querySelector('.highlighted') ? 'inline-block' : 'none';
+            }
+        }
+
+        function loadHighlightedSpans() {
+            var highlightedSpans = document.querySelectorAll('#displayText .highlighted');
+            highlightedSpans.forEach(function(span) {
+                var range = document.createRange();
+                range.selectNodeContents(span);
+                span.onclick = function() {
+                    if (span.parentElement) {
+                        span.outerHTML = span.innerHTML; // クリックで <span> タグを取り外す
+                        undopush();
+                    }
+                };
+            });
+        }
+
+        // 選択完了ボタン
+        function removeDuplicates() {
+            var form = document.getElementById('form');
+            var request = document.getElementById('secretField');
+            var body = document.getElementById('displayText').innerHTML;
+
+            request.value = body;
+
+            form.appendChild(request);
+            form.submit();
+        }
+    </script>
+</body>
+
+</html>
