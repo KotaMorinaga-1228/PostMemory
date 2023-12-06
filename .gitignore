@@ -1,6 +1,4 @@
 models/archives.db
 models/users.db
 models/__pycache__/
-models/confirm.py
-app/static/images/
 app/__pycache__/

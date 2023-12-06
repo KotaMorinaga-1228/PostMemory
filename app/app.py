@@ -21,7 +21,7 @@ def get_db():
     return g.db
 
 app = Flask(__name__)
-app.secret_key = "g8wkf0pvje6m2unhgt3j"
+app.secret_key = "putyourownkey"
 dt_now = datetime.now()
 
 
